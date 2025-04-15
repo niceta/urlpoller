@@ -7,7 +7,7 @@ import training.poller.service.UrlPoller
 
 fun main(args: Array<String>) {
 	val urls = setOf("http://www.google.com/", "https://www.ya.ru/")
-	val interval = 3000L
+	val interval = 100L
 	val poller = UrlPoller(urls, interval)
 	poller.start()
 

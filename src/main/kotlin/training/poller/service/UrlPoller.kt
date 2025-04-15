@@ -13,30 +13,36 @@ class UrlPoller(
     fun start() {
         scope.launch {
             while (true) {
-                urls.forEach { url ->
-                    launch {
-                        checkUrl(url)
+                coroutineScope {
+                    urls.forEach { url ->
+                        launch {
+                            checkUrl(url)
+                        }
                     }
                 }
+                println("делэюсь")
                 delay(pollingIntervalMillis)
             }
         }
     }
-    private fun checkUrl(url: String) {
-        var connection: HttpURLConnection? = null
-        try {
-            connection = (URI(url).toURL().openConnection() as HttpURLConnection).apply {
-                requestMethod = "GET"
-                val timeout = 5000
-                connectTimeout = timeout
-                readTimeout = timeout
+    private suspend fun checkUrl(url: String) {
+        withContext(Dispatchers.IO) {
+            println("чекаю урл $url")
+            var connection: HttpURLConnection? = null
+            try {
+                connection = (URI(url).toURL().openConnection() as HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    val timeout = 5000
+                    connectTimeout = timeout
+                    readTimeout = timeout
+                }
+                val responseCode = connection.responseCode
+                println("Checked $url - Response code: $responseCode")
+            } catch (e: Exception) {
+                println("Error checking $url: ${e.message}")
+            } finally {
+                connection?.disconnect()
             }
-            val responseCode = connection.responseCode
-            println("Checked $url - Response code: $responseCode")
-        } catch (e: Exception) {
-            println("Error checking $url: ${e.message}")
-        } finally {
-            connection?.disconnect()
         }
     }
 }
