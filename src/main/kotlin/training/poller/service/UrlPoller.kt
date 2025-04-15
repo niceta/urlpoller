@@ -29,6 +29,7 @@ class UrlPoller(
         withContext(Dispatchers.IO) {
             println("чекаю урл $url")
             var connection: HttpURLConnection? = null
+            val timestamp = java.time.LocalDateTime.now().toString()
             try {
                 connection = (URI(url).toURL().openConnection() as HttpURLConnection).apply {
                     requestMethod = "GET"
@@ -37,7 +38,7 @@ class UrlPoller(
                     readTimeout = timeout
                 }
                 val responseCode = connection.responseCode
-                println("Checked $url - Response code: $responseCode")
+                println("[$timestamp] url: $url - status: $responseCode")
             } catch (e: Exception) {
                 println("Error checking $url: ${e.message}")
             } finally {
