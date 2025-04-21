@@ -3,12 +3,16 @@ package training.poller.service
 import kotlinx.coroutines.*
 import java.net.HttpURLConnection
 import java.net.URI
+import jakarta.inject.Singleton
+import java.util.concurrent.atomic.AtomicLong
 
-class UrlPoller(
+@Singleton
+class PollingService(
     private val urls: Set<String>,
-    private val pollingIntervalMillis: Long
+    pollingIntervalMillis: Long
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val pollingIntervalMillis = AtomicLong(pollingIntervalMillis)
 
     fun start() {
         scope.launch {
@@ -21,10 +25,15 @@ class UrlPoller(
                     }
                 }
                 println("делэюсь")
-                delay(pollingIntervalMillis)
+                delay(pollingIntervalMillis.get())
             }
         }
     }
+
+    fun updatePollingInterval(newPollingInterval: Long) {
+        pollingIntervalMillis.set(newPollingInterval)
+    }
+
     private suspend fun checkUrl(url: String) {
         withContext(Dispatchers.IO) {
             println("чекаю урл $url")
