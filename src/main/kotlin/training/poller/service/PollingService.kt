@@ -4,15 +4,17 @@ import kotlinx.coroutines.*
 import java.net.HttpURLConnection
 import java.net.URI
 import jakarta.inject.Singleton
+import java.util.Collections
 import java.util.concurrent.atomic.AtomicLong
 
 @Singleton
 class PollingService(
-    private val urls: Set<String>,
+    urls: Set<String>,
     pollingIntervalMillis: Long
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val pollingIntervalMillis = AtomicLong(pollingIntervalMillis)
+    private val urls = Collections.synchronizedSet(urls)
 
     fun start() {
         scope.launch {
@@ -30,9 +32,10 @@ class PollingService(
         }
     }
 
-    fun updatePollingInterval(newPollingInterval: Long) {
-        pollingIntervalMillis.set(newPollingInterval)
-    }
+    fun updatePollingInterval(newPollingInterval: Long) = pollingIntervalMillis.set(newPollingInterval)
+    fun addUrl(url: String) = urls.add(url)
+    fun removeUrl(url: String) = urls.remove(url)
+    fun getUrls() = urls.toList()
 
     private suspend fun checkUrl(url: String) {
         withContext(Dispatchers.IO) {
