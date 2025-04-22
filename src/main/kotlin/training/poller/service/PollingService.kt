@@ -1,5 +1,6 @@
 package training.poller.service
 
+import io.micronaut.context.annotation.Value
 import kotlinx.coroutines.*
 import java.net.HttpURLConnection
 import java.net.URI
@@ -9,8 +10,8 @@ import java.util.concurrent.atomic.AtomicLong
 
 @Singleton
 class PollingService(
-    urls: Set<String>,
-    pollingIntervalMillis: Long
+    @Value("\${polling.initial-urls}") urls: Set<String>,
+    @Value("\${polling.interval-ms}") pollingIntervalMillis: Long
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val pollingIntervalMillis = AtomicLong(pollingIntervalMillis)
