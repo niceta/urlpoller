@@ -5,8 +5,16 @@ import java.net.HttpURLConnection
 import java.net.URI
 import jakarta.inject.Singleton
 import training.poller.config.PollingServiceConfig
+import java.net.MalformedURLException
 import java.util.Collections
 import java.util.concurrent.atomic.AtomicLong
+
+sealed class PollingException(message: String): RuntimeException(message)
+
+class TooShortIntervalException(min: Long): PollingException("Interval must be >= $min ms")
+class InvalidUrlException(url: String): PollingException("Invalid URL: $url")
+class UrlNotFoundException(url: String): PollingException("URL not found: $url")
+
 
 @Singleton
 class PollingService(
@@ -32,9 +40,27 @@ class PollingService(
         }
     }
 
-    fun updatePollingInterval(newPollingInterval: Long) = pollingIntervalMillis.set(newPollingInterval)
-    fun addUrl(url: String) = urls.add(url)
-    fun removeUrl(url: String) = urls.remove(url)
+    fun updatePollingInterval(newPollingInterval: Long) {
+        val minIntervalMs = 1000L
+        if (newPollingInterval < minIntervalMs) {
+            throw TooShortIntervalException(minIntervalMs)
+        }
+        pollingIntervalMillis.set(newPollingInterval)
+    }
+    fun addUrl(url: String) {
+        try {
+            URI(url).toURL()
+        } catch(error: MalformedURLException) {
+            throw InvalidUrlException(url)
+        }
+        urls.add(url)
+    }
+
+    fun removeUrl(url: String) {
+        if (!urls.remove(url)) {
+            throw UrlNotFoundException(url)
+        }
+    }
     fun getUrls() = urls.toList()
 
     private suspend fun checkUrl(url: String) {
